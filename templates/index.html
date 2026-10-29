@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Image Classification</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f5fa;
+            margin: 0;
+            color: #183153;
+        }
+
+        header {
+            background: #123b63;
+            color: white;
+            padding: 22px;
+            text-align: center;
+        }
+
+        main {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px #00000012;
+        }
+
+        h2 {
+            color: #1769aa;
+        }
+
+        .upload-box {
+            border: 2px dashed #1769aa;
+            padding: 30px 15px;
+            text-align: center;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        input, button {
+            margin-top: 15px;
+            padding: 12px;
+            font-size: 15px;
+            max-width: 100%;
+        }
+
+        button {
+            background: #1769aa;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #104d80;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        #preview {
+            display: none;
+            max-width: 100%;
+            max-height: 280px;
+            margin: 20px auto 0;
+        }
+
+        #message {
+            margin-top: 20px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        footer {
+            text-align: center;
+            color: #52677d;
+            padding: 20px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Medical Image Classification</h1>
+    <p>AI-Based Disease Detection Project</p>
+</header>
+
+<main>
+    <h2>Upload Medical Image</h2>
+
+    <p>
+        Select a supported medical image for this academic prototype.
+        Currently, JPG, JPEG and PNG formats are accepted.
+    </p>
+
+    <div class="upload-box">
+        <label for="medicalImage">Choose an image:</label>
+        <br>
+
+        <input
+            type="file"
+            id="medicalImage"
+            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+        >
+
+        <br>
+        <img id="preview" alt="Selected image preview">
+        <br>
+
+        <button id="validateButton" type="button">
+            Upload Image
+        </button>
+    </div>
+
+    <div id="message" aria-live="polite"></div>
+
+    <p>
+        <strong>Note:</strong> This is an academic prototype.
+        It does not provide a medical diagnosis.
+    </p>
+</main>
+
+<footer>
+    Medical Image Classification for Disease Detection
+</footer>
+
+<script>
+"use strict";
+
+const imageInput = document.getElementById("medicalImage");
+const preview = document.getElementById("preview");
+const message = document.getElementById("message");
+const validateButton = document.getElementById("validateButton");
+
+imageInput.addEventListener("change", function () {
+    const file = imageInput.files[0];
+
+    message.textContent = "";
+    preview.removeAttribute("src");
+    preview.style.display = "none";
+
+    if (!file) {
+        return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+
+    if (!allowedTypes.includes(file.type)) {
+        message.textContent = "Please select a JPG, JPEG or PNG image.";
+        imageInput.value = "";
+        return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+        message.textContent = "Image must be smaller than 10 MB.";
+        imageInput.value = "";
+        return;
+    }
+
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+});
+
+validateButton.addEventListener("click", async function () {
+    const file = imageInput.files[0];
+
+    if (!file) {
+        message.textContent = "Please select an image first.";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("medicalImage", file);
+
+    validateButton.disabled = true;
+    message.textContent = "Uploading image to backend...";
+
+    try {
+        const response = await fetch("/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Upload failed.");
+        }
+
+        message.textContent =
+            "Success! " + result.message +
+            " Filename: " + result.filename;
+
+    } catch (error) {
+        message.textContent =
+            "Upload failed: " + error.message;
+    } finally {
+        validateButton.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>
